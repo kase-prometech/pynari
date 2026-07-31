@@ -30,8 +30,6 @@ namespace pynari {
   {
     PYNARI_TRACK_LEAKS(std::cout << "#pynari: RELEASING world "
                        << (int*)this << ":" << (int*)handle << std::endl);
-    anariRelease(device->handle,handle);
-    handle = {};
   }
 
   const std::tuple<float, float, float, float, float, float> World::getBounds()

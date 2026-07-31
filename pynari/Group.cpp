@@ -50,10 +50,8 @@ namespace pynari {
 
   Group::~Group()
   {
-    std::cout << "#pynari: RELEASING group "
-              << (int*)this << ":" << (int*)handle << std::endl;
-    anariRelease(device->handle,handle);
-    handle = {};
+    PYNARI_TRACK_LEAKS(std::cout << "#pynari: RELEASING group "
+                       << (int*)this << ":" << (int*)handle << std::endl);
   }
   
 }
