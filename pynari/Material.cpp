@@ -32,7 +32,5 @@ namespace pynari {
   {
     PYNARI_TRACK_LEAKS(std::cout << "#pynari: RELEASING material "
                        << (int*)this << ":" << (int*)handle << std::endl);
-    anariRelease(device->handle,handle);
-    handle = {};
   }
 }
