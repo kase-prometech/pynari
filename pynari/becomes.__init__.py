@@ -3,6 +3,7 @@ from .pynari import newDevice
 from .pynari import has_cuda_capable_gpu
 
 from .pynari import DATA_TYPE
+from .pynari import BOOL
 from .pynari import STRING
 from .pynari import OBJECT
 from .pynari import SURFACE
@@ -73,6 +74,8 @@ from .pynari import uint
 from .pynari import uint2
 from .pynari import uint3
 from .pynari import uint4
+
+from .pynari import bool
 
 
 

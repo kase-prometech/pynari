@@ -50,6 +50,7 @@ PYBIND11_MODULE(pynari, m) {
         py::arg("devName")="default");
  
   m.attr("DATA_TYPE")     = py::int_((int)ANARI_DATA_TYPE);
+  m.attr("BOOL")          = py::int_((int)ANARI_BOOL);
   m.attr("STRING")        = py::int_((int)ANARI_STRING);
   m.attr("OBJECT")        = py::int_((int)ANARI_OBJECT);
   m.attr("SURFACE")       = py::int_((int)ANARI_SURFACE);
@@ -108,6 +109,8 @@ PYBIND11_MODULE(pynari, m) {
   m.attr("uint3")  = py::int_((int)ANARI_UINT32_VEC3);
   m.attr("uint4")  = py::int_((int)ANARI_UINT32_VEC4);
 
+  m.attr("bool")   = py::int_((int)ANARI_BOOL);
+
   m.attr("UINT8")        = py::int_((int)ANARI_UINT8);
   m.attr("UINT8_VEC2")   = py::int_((int)ANARI_UINT8_VEC2);
   m.attr("UINT8_VEC3")   = py::int_((int)ANARI_UINT8_VEC3);
@@ -141,6 +144,12 @@ PYBIND11_MODULE(pynari, m) {
   object.def("setParameterArray1D",  &pynari::Object::setArray1D_np);
   object.def("setParameterArray2D",  &pynari::Object::setArray2D_np);
   object.def("setParameterArray3D",  &pynari::Object::setArray3D_np);
+  /*! set FROM a python bool value. note this has to be registered
+      BEFORE the int/uint overloads below (pybind11 would otherwise
+      happily pass True/False to those as 1/0), and uses noconvert()
+      so that only actual python bools get routed here */
+  object.def("setParameter",  &pynari::Object::set_bool,
+             py::arg("name"), py::arg("type"), py::arg("value").noconvert());
   /*! set FROM a python float value */
   object.def("setParameter",  &pynari::Object::set_float);
   /*! set FROM a python float tuple */
