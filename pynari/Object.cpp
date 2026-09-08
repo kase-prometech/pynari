@@ -255,6 +255,31 @@ namespace pynari {
                           nullptr);
   }
     
+  void Object::set_bool(const char *name,
+                        int type,
+                        bool v)
+  {
+    assertThisObjectIsValid();
+    switch(type) {
+    case ANARI_BOOL:
+      return anari::setParameter(device->handle,this->handle,name,
+                                 (bool)v);
+    case ANARI_INT32:
+      return anari::setParameter(device->handle,this->handle,name,
+                                 (int)v);
+    case ANARI_UINT32:
+      return anari::setParameter(device->handle,this->handle,name,
+                                 (uint)v);
+    case ANARI_FLOAT32:
+      return anari::setParameter(device->handle,this->handle,name,
+                                 (float)v);
+    default:
+      throw std::runtime_error
+        (std::string(__PRETTY_FUNCTION__)
+         +" unsupported type "+to_string((anari::DataType)type));
+    }
+  }
+    
   void Object::set_float(const char *name,
                          int type,
                          float v)

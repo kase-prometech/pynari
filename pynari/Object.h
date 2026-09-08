@@ -71,6 +71,8 @@ namespace pynari {
                        const py::buffer &buffer);
     void set_box1(const char *name, int type,
                   const helium::box1 b);
+    void set_bool(const char *name, int type,
+                  bool v);
     void set_float(const char *name, int type,
                    float v);
     void set_float2(const char *name, int type, 
