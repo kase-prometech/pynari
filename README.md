@@ -167,8 +167,47 @@ either.  Different channels are read using
 
 # Building, Installing, and Running
 
-Eventually pynari should be installable through pip, but it's not yet
-in a state to do so. Until then:
+pynari can be built and installed either with `pip` (recommended) or
+with a plain `cmake` build. Both require the official ANARI SDK
+(https://github.com/KhronosGroup/ANARI-SDK) to be built and installed
+first.
+
+## Building with pip
+
+The repository is a regular Python project (`pyproject.toml`) that uses
+[scikit-build-core](https://scikit-build-core.readthedocs.io/) to drive
+the CMake build. If the ANARI SDK is installed in a non-standard
+location, tell CMake where to find it:
+
+```
+# from the repository root
+pip install . -C cmake.define.CMAKE_PREFIX_PATH=/path/to/anari/install
+```
+
+Any other CMake variable can be passed the same way, e.g. to select a
+CUDA compiler or a specific python interpreter for the build:
+
+```
+pip install . \
+  -C cmake.define.CMAKE_PREFIX_PATH=/path/to/anari/install \
+  -C cmake.define.CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
+```
+
+Alternatively `CMAKE_PREFIX_PATH` (and `CUDACXX`) can be set as
+environment variables. `pip wheel . -C ...` builds a wheel instead of
+installing directly; `pip install -v ...` shows the CMake output.
+
+By default the resulting package only contains the `pynari` extension
+module, and looks for `libanari` in the directory it was linked from
+(the ANARI SDK install). To create a self-contained package, the runtime
+libraries can be copied into it:
+
+- `-C cmake.define.PYNARI_BUNDLE_ANARI=ON` copies `libanari` into the
+  package.
+- `-C cmake.define.PYNARI_BUNDLE_BARNEY=ON` additionally copies the
+  barney libraries (requires barney to be findable by CMake).
+
+## Building with cmake
 
 - To *build*: first download, build, and install the official ANARI
   SDK. Once the SDK is installed this project should build out of the

@@ -115,32 +115,51 @@ target_link_libraries(pynari
   anari::anari
   )
 
-set(PYNARI_BUILD_FOR_PIP OFF)
-message("PYNARI_BUILD_FOR_PIP ${PYNARI_BUILD_FOR_PIP}")
+# When built through pip (scikit-build-core), CMake is configured with
+# SKBUILD defined and the install prefix pointing at the wheel's platlib
+# directory. In that case install pynari as a proper python package:
+#
+#   <platlib>/pynari/__init__.py
+#   <platlib>/pynari/pynari.<abi>.so
+#
+# The same layout can also be requested for a plain cmake build with
+# -DPYNARI_BUILD_FOR_PIP=ON.
+if (DEFINED SKBUILD)
+  set(PYNARI_BUILD_FOR_PIP_DEFAULT ON)
+else()
+  set(PYNARI_BUILD_FOR_PIP_DEFAULT OFF)
+endif()
+option(PYNARI_BUILD_FOR_PIP
+  "Install pynari as a python package directory (pynari/__init__.py + module)"
+  ${PYNARI_BUILD_FOR_PIP_DEFAULT})
+option(PYNARI_BUNDLE_ANARI
+  "When building for pip, copy the ANARI runtime library into the package"
+  OFF)
+option(PYNARI_BUNDLE_BARNEY
+  "When building for pip, copy the barney runtime libraries into the package"
+  OFF)
+message(STATUS "PYNARI_BUILD_FOR_PIP ${PYNARI_BUILD_FOR_PIP}")
+
 if (PYNARI_BUILD_FOR_PIP)
-find_package(barney)
-  message("building for pip...")
+  message(STATUS "building pynari as a python package...")
+  # Look for shared libraries next to the module first (bundled libs),
+  # then in the directories they were linked from (non-bundled libs,
+  # e.g. an ANARI SDK installed in a non-system prefix).
   if (APPLE)
-    set_target_properties(pynari PROPERTIES INSTALL_RPATH "@loader_path")
+    set(PYNARI_RPATH_ORIGIN "@loader_path")
   else()
-    set_target_properties(pynari PROPERTIES INSTALL_RPATH "$ORIGIN")
+    set(PYNARI_RPATH_ORIGIN "$ORIGIN")
   endif()
-  install(
-    IMPORTED_RUNTIME_ARTIFACTS
-    pynari
-    barney::barney
-    barney::anari_library_barney
-    anari::anari
-    
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/pynari
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/pynari
-#    ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/pynari
+  set_target_properties(pynari PROPERTIES
+    INSTALL_RPATH "${PYNARI_RPATH_ORIGIN}"
+    INSTALL_RPATH_USE_LINK_PATH ON
     )
+  # destinations are relative to CMAKE_INSTALL_PREFIX, which
+  # scikit-build-core sets to the wheel's platlib directory
   install(
     TARGETS pynari
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/pynari
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/pynari
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/pynari
+    LIBRARY DESTINATION pynari
+    RUNTIME DESTINATION pynari
     )
   install(
   # note(iw): the reason we store this as 'becomes.__init__.py'
@@ -154,8 +173,25 @@ find_package(barney)
     RENAME __init__.py
     # where to put it - we want this in <install>/pynari
     # $(install_dir)/<packagename(=pynari)>/__init__.py
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/pynari
+    DESTINATION pynari
     )
+  if (PYNARI_BUNDLE_ANARI)
+    install(
+      IMPORTED_RUNTIME_ARTIFACTS anari::anari
+      LIBRARY DESTINATION pynari
+      RUNTIME DESTINATION pynari
+      )
+  endif()
+  if (PYNARI_BUNDLE_BARNEY)
+    find_package(barney REQUIRED)
+    install(
+      IMPORTED_RUNTIME_ARTIFACTS
+      barney::barney
+      barney::anari_library_barney
+      LIBRARY DESTINATION pynari
+      RUNTIME DESTINATION pynari
+      )
+  endif()
 else()
   include(GNUInstallDirs)
   install(
