@@ -177,17 +177,11 @@ first.
 The repository is a regular Python project (`pyproject.toml`) that uses
 [scikit-build-core](https://scikit-build-core.readthedocs.io/) to drive
 the CMake build. If the ANARI SDK is installed in a non-standard
-location, tell CMake where to find it:
+location, tell CMake where to find it. Any other CMake variable can be
+passed the same way, e.g. to select a CUDA compiler:
 
 ```
 # from the repository root
-pip install . -C cmake.define.CMAKE_PREFIX_PATH=/path/to/anari/install
-```
-
-Any other CMake variable can be passed the same way, e.g. to select a
-CUDA compiler or a specific python interpreter for the build:
-
-```
 pip install . \
   -C cmake.define.CMAKE_PREFIX_PATH=/path/to/anari/install \
   -C cmake.define.CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
@@ -209,9 +203,8 @@ libraries can be copied into it:
 
 ## Building with cmake
 
-- To *build*: first download, build, and install the official ANARI
-  SDK. Once the SDK is installed this project should build out of the
-  box with `cmake`, without additional dependencies. Once built, you
+- To *build*: once the ANARI SDK is installed this project should
+  build out of the box with `cmake`, without additional dependencies. Once built, you
   should have a library of name 
   `pynari.cpython-312-x86_64-linux-gnu.so` (or similar for other
   OS'es)

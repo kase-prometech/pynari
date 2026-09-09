@@ -1,13 +1,4 @@
-# ======================================================================== #
-# Python packaging metadata for pynari.
-#
-# Build and install with pip (the ANARI SDK must be findable by CMake,
-# e.g. through CMAKE_PREFIX_PATH or anari_DIR):
-#
-#   pip install . -C cmake.define.CMAKE_PREFIX_PATH=/path/to/anari/install
-#
-# See the "Building with pip" section in README.md for details.
-# ======================================================================== #
+# Python packaging metadata for pynari; see "Building with pip" in README.md.
 
 [build-system]
 requires = ["scikit-build-core>=0.10"]
@@ -40,7 +31,6 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/ingowald/pynari"
-Repository = "https://github.com/ingowald/pynari"
 Issues = "https://github.com/ingowald/pynari/issues"
 
 # ------------------------------------------------------------------------
@@ -48,18 +38,23 @@ Issues = "https://github.com/ingowald/pynari/issues"
 # ------------------------------------------------------------------------
 [tool.scikit-build]
 minimum-version = "build-system.requires"
-# CUDA_ARCHITECTURES / CMP0104 handling in CMakeLists.txt needs >= 3.18
-cmake.version = ">=3.18"
 build-dir = "build-pip/{wheel_tag}"
-# Everything that goes into the wheel is placed there by CMake's install()
-# rules (pynari/__init__.py + the extension module); there is no pure
-# python package directory to copy.
+# always build with ninja (fetched from PyPI if needed) so the C++/CUDA
+# sources compile in parallel instead of falling back to serial make
+ninja.make-fallback = false
+# CMake's install() rules place everything in the wheel; no pure python
+# package directory to copy
 wheel.packages = []
-# Keep the large sample data sets out of the source distribution.
+# keep the large sample data sets and pybind11's tests/docs out of the sdist
 sdist.exclude = [
   "samples/*.binary.*",
   "samples/*.npz",
+  "external/pybind11/tests",
+  "external/pybind11/docs",
 ]
+
+[tool.scikit-build.cmake.define]
+PYNARI_BUILD_FOR_PIP = "ON"
 
 # The package version is taken from PYNARI_VERSION_{MAJOR,MINOR,PATCH}
 # in CMakeLists.txt so it only has to be maintained in one place.

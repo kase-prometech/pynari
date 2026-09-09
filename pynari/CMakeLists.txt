@@ -115,23 +115,14 @@ target_link_libraries(pynari
   anari::anari
   )
 
-# When built through pip (scikit-build-core), CMake is configured with
-# SKBUILD defined and the install prefix pointing at the wheel's platlib
-# directory. In that case install pynari as a proper python package:
-#
-#   <platlib>/pynari/__init__.py
-#   <platlib>/pynari/pynari.<abi>.so
-#
-# The same layout can also be requested for a plain cmake build with
-# -DPYNARI_BUILD_FOR_PIP=ON.
-if (DEFINED SKBUILD)
-  set(PYNARI_BUILD_FOR_PIP_DEFAULT ON)
-else()
-  set(PYNARI_BUILD_FOR_PIP_DEFAULT OFF)
-endif()
+# Install pynari as a python package directory, i.e.
+#   <prefix>/pynari/__init__.py
+#   <prefix>/pynari/pynari.<abi>.so
+# This is what pyproject.toml turns on for pip builds, where <prefix> is
+# the wheel's platlib directory.
 option(PYNARI_BUILD_FOR_PIP
   "Install pynari as a python package directory (pynari/__init__.py + module)"
-  ${PYNARI_BUILD_FOR_PIP_DEFAULT})
+  OFF)
 option(PYNARI_BUNDLE_ANARI
   "When building for pip, copy the ANARI runtime library into the package"
   OFF)
@@ -141,27 +132,18 @@ option(PYNARI_BUNDLE_BARNEY
 message(STATUS "PYNARI_BUILD_FOR_PIP ${PYNARI_BUILD_FOR_PIP}")
 
 if (PYNARI_BUILD_FOR_PIP)
-  message(STATUS "building pynari as a python package...")
   # Look for shared libraries next to the module first (bundled libs),
   # then in the directories they were linked from (non-bundled libs,
   # e.g. an ANARI SDK installed in a non-system prefix).
-  if (APPLE)
-    set(PYNARI_RPATH_ORIGIN "@loader_path")
-  else()
-    set(PYNARI_RPATH_ORIGIN "$ORIGIN")
-  endif()
   set_target_properties(pynari PROPERTIES
-    INSTALL_RPATH "${PYNARI_RPATH_ORIGIN}"
+    INSTALL_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path,$ORIGIN>"
     INSTALL_RPATH_USE_LINK_PATH ON
     )
-  # destinations are relative to CMAKE_INSTALL_PREFIX, which
-  # scikit-build-core sets to the wheel's platlib directory
   install(
     TARGETS pynari
     LIBRARY DESTINATION pynari
     RUNTIME DESTINATION pynari
     )
-  install(
   # note(iw): the reason we store this as 'becomes.__init__.py'
   # in the source tree is because we want this file to be
   # 'recognized' by python _only_ when installed through a pip
@@ -169,25 +151,22 @@ if (PYNARI_BUILD_FOR_PIP)
   # tree, python will try to call it even if we run on a
   # local build that's not a pip package, which will
   # fail.
+  install(
     FILES becomes.__init__.py
     RENAME __init__.py
-    # where to put it - we want this in <install>/pynari
-    # $(install_dir)/<packagename(=pynari)>/__init__.py
     DESTINATION pynari
     )
+  set(PYNARI_BUNDLED_LIBS)
   if (PYNARI_BUNDLE_ANARI)
-    install(
-      IMPORTED_RUNTIME_ARTIFACTS anari::anari
-      LIBRARY DESTINATION pynari
-      RUNTIME DESTINATION pynari
-      )
+    list(APPEND PYNARI_BUNDLED_LIBS anari::anari)
   endif()
   if (PYNARI_BUNDLE_BARNEY)
     find_package(barney REQUIRED)
+    list(APPEND PYNARI_BUNDLED_LIBS barney::barney barney::anari_library_barney)
+  endif()
+  if (PYNARI_BUNDLED_LIBS)
     install(
-      IMPORTED_RUNTIME_ARTIFACTS
-      barney::barney
-      barney::anari_library_barney
+      IMPORTED_RUNTIME_ARTIFACTS ${PYNARI_BUNDLED_LIBS}
       LIBRARY DESTINATION pynari
       RUNTIME DESTINATION pynari
       )
